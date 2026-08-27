@@ -4,9 +4,7 @@
 
 ## 배포 URL
 
-https://<GITHUB_USERNAME>.github.io/<REPO_NAME>/
-
-(푸시 후 실제 주소로 교체)
+https://logan8415-creator.github.io/hyundai-bonus-calculator/
 
 ## 성과급 구성
 
