@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0E1216">
+<title>현대차 수행/업무기사 성과급 계산기</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --ink:#12171C;
+    --ink-2:#3A444E;
+    --muted:#79838E;
+    --faint:#A7AFB8;
+    --hair:#E5E8EB;
+    --hair-2:#EFF1F3;
+    --surface:#FFFFFF;
+    --paper:#F1F2F4;
+    --wash:#F7F8F9;
+    --accent:#1E46A8;
+    --accent-soft:#EDF1FA;
+    --stop:#A32B2B;
+    --stop-soft:#FBEEEE;
+    --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+    --sans:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+    --r:11px;
+    --shadow:0 1px 2px rgba(18,23,28,.04), 0 10px 28px -16px rgba(18,23,28,.18);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);color:var(--ink);
+    font-family:var(--sans);font-size:15px;line-height:1.55;
+    letter-spacing:-.005em;-webkit-text-size-adjust:100%;
+    -webkit-font-smoothing:antialiased;
+    padding:22px 14px calc(52px + env(safe-area-inset-bottom));
+  }
+  .wrap{max-width:500px;margin:0 auto;}
+  .num{font-family:var(--mono);font-variant-numeric:tabular-nums;font-feature-settings:"tnum";}
+
+  /* ── header ─────────────────────────── */
+  header{margin:0 2px 20px;}
+  .year{
+    font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.32em;
+    color:var(--accent);display:block;margin-bottom:8px;
+  }
+  h1{
+    margin:0;font-weight:800;
+    font-size:clamp(15px,4.35vw,25px);
+    letter-spacing:-.035em;line-height:1.2;white-space:nowrap;
+  }
+  .tagline{margin:8px 0 0;font-size:12.5px;color:var(--muted);letter-spacing:0;}
+
+  /* ── card ───────────────────────────── */
+  .card{
+    background:var(--surface);border-radius:var(--r);
+    box-shadow:var(--shadow);padding:18px 17px;margin-bottom:12px;
+  }
+  .kicker{
+    font-size:10.5px;font-weight:700;letter-spacing:.18em;color:var(--faint);
+    margin:0 0 14px;text-transform:uppercase;
+  }
+
+  /* ── 성과급 구성 ────────────────────── */
+  .scheme{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:12px 0;border-top:1px solid var(--hair-2);}
+  .scheme:first-of-type{border-top:none;padding-top:2px;}
+  .scheme:last-of-type{padding-bottom:2px;}
+  .scheme-l{min-width:0;}
+  .scheme-n{font-size:13.5px;font-weight:700;letter-spacing:-.02em;}
+  .scheme-d{font-size:11.5px;color:var(--muted);margin-top:1px;}
+  .scheme-v{
+    flex:0 0 auto;text-align:right;font-size:13px;font-weight:600;
+    color:var(--accent);letter-spacing:-.02em;white-space:nowrap;
+  }
+
+  /* ── form ───────────────────────────── */
+  .field{margin-bottom:15px;}
+  .field:last-of-type{margin-bottom:0;}
+  label,.lab{display:block;font-size:12px;font-weight:700;color:var(--ink-2);margin-bottom:7px;letter-spacing:-.01em;}
+  .hint{font-weight:500;color:var(--faint);font-size:10.5px;margin-left:6px;letter-spacing:0;}
+  select,input[type=text]{
+    font-family:var(--sans);font-size:16px;font-weight:500;color:var(--ink);
+    background:var(--wash);border:1px solid var(--hair);border-radius:8px;
+    padding:0 12px;height:48px;width:100%;appearance:none;-webkit-appearance:none;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  select:hover,input:hover{border-color:#D3D8DD;}
+  select{
+    background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);
+    background-position:calc(100% - 17px) 50%,calc(100% - 12px) 50%;
+    background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:32px;
+  }
+  select:focus-visible,input:focus-visible,button:focus-visible,summary:focus-visible{
+    outline:2px solid var(--accent);outline-offset:2px;
+  }
+  .date-row{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:7px;}
+  .money{position:relative;}
+  .money input{font-family:var(--mono);font-weight:500;text-align:right;padding-right:36px;letter-spacing:-.02em;}
+  .money .unit{position:absolute;right:13px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--faint);font-weight:600;pointer-events:none;}
+
+  button.calc{
+    width:100%;margin-top:20px;background:var(--ink);color:#fff;border:none;border-radius:8px;
+    font-family:var(--sans);font-size:16px;font-weight:700;letter-spacing:.02em;
+    height:52px;cursor:pointer;transition:background .15s ease,transform .08s ease;
+  }
+  button.calc:hover{background:#232B33;}
+  button.calc:active{transform:scale(.994);background:#000;}
+  .error{display:none;margin:12px 0 0;font-size:12.5px;color:var(--stop);font-weight:600;}
+  .error.on{display:block;}
+
+  /* ── result ─────────────────────────── */
+  #result{display:none;}
+  #result.on{display:block;}
+  .rhead{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:15px;}
+  .rhead .kicker{margin:0;}
+  .rmeta{font-family:var(--mono);font-size:10.5px;color:var(--faint);text-align:right;line-height:1.6;letter-spacing:-.01em;}
+
+  .bar{display:flex;height:5px;border-radius:3px;overflow:hidden;background:var(--hair-2);margin-bottom:4px;}
+  .bar i{display:block;height:100%;}
+  .bar-leg{display:flex;gap:12px;font-size:10px;color:var(--faint);font-family:var(--mono);margin-bottom:16px;}
+  .bar-leg span::before{content:"";display:inline-block;width:6px;height:6px;border-radius:2px;margin-right:4px;vertical-align:middle;}
+
+  .tier{padding:15px 0;border-top:1px solid var(--hair-2);}
+  .tier:first-of-type{border-top:none;padding-top:0;}
+  .tier-h{display:flex;align-items:baseline;gap:8px;margin-bottom:11px;}
+  .tier-n{font-size:14px;font-weight:800;letter-spacing:-.02em;}
+  .tier-d{font-size:11px;color:var(--muted);}
+  .ln{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:2px 0;}
+  .ln .k{font-size:12px;font-weight:600;color:var(--muted);}
+  .ln .v{font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:500;font-size:16px;letter-spacing:-.03em;}
+  .ln.net .v{font-weight:600;color:var(--accent);font-size:17px;}
+  .ln .v.dim{color:var(--faint);font-size:14px;}
+  .meta-line{margin-top:9px;font-family:var(--mono);font-size:10px;color:var(--faint);letter-spacing:-.01em;}
+
+  details{margin-top:10px;}
+  summary{
+    font-size:11px;font-weight:600;color:var(--accent);cursor:pointer;list-style:none;
+    padding:4px 0;letter-spacing:-.01em;
+  }
+  summary::-webkit-details-marker{display:none;}
+  summary::after{content:" ▾";font-size:9px;}
+  details[open] summary::after{content:" ▴";}
+  .panel{background:var(--wash);border-radius:8px;padding:11px 12px;margin-top:3px;}
+  .prow{display:flex;justify-content:space-between;gap:10px;font-size:11.5px;padding:3px 0;color:var(--ink-2);}
+  .prow span:last-child{font-family:var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.02em;}
+  .prow.tot{border-top:1px solid var(--hair);margin-top:6px;padding-top:7px;font-weight:700;color:var(--ink);}
+  .prow.sub{color:var(--faint);}
+
+  .stop{display:inline-block;background:var(--stop-soft);color:var(--stop);font-size:13px;font-weight:700;letter-spacing:.02em;padding:5px 11px;border-radius:6px;}
+  .stop-d{font-size:11px;color:var(--muted);margin-top:8px;}
+
+  .totals{border-top:1.5px solid var(--ink);margin-top:6px;padding-top:14px;}
+  .trow{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:3px 0;}
+  .trow .k{font-size:12.5px;font-weight:600;color:var(--muted);}
+  .trow .v{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:15px;font-weight:500;letter-spacing:-.03em;}
+  .trow.big{padding-top:9px;}
+  .trow.big .k{font-size:14px;font-weight:800;color:var(--ink);}
+  .trow.big .v{font-size:24px;font-weight:600;color:var(--accent);letter-spacing:-.04em;}
+  .pct{text-align:right;font-family:var(--mono);font-size:10.5px;color:var(--faint);margin-top:2px;}
+
+  .note{margin-top:16px;padding-top:13px;border-top:1px solid var(--hair-2);font-size:11px;color:var(--muted);line-height:1.7;letter-spacing:-.005em;}
+  .note b{color:var(--ink-2);font-weight:700;}
+  footer{margin-top:20px;font-size:10.5px;color:var(--faint);text-align:center;line-height:1.6;}
+
+  @media (max-width:359px){
+    body{padding:16px 10px 44px;}
+    .card{padding:15px 13px;}
+    .date-row{gap:5px;}
+    select{padding:0 7px;padding-right:24px;background-position:calc(100% - 12px) 50%,calc(100% - 7px) 50%;font-size:15px;}
+    .trow.big .v{font-size:21px;}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <span class="year">2026</span>
+    <h1>현대차 수행/업무기사 성과급 계산기</h1>
+    <p class="tagline">입사일 기준 지급액과 세후 실수령액을 추정합니다.</p>
+  </header>
+
+  <section class="card">
+    <p class="kicker">성과급 구성</p>
+    <div class="scheme">
+      <div class="scheme-l">
+        <div class="scheme-n">1차</div>
+        <div class="scheme-d">노사서약일 (9월 2일 예상)</div>
+      </div>
+      <div class="scheme-v">기본급 300% + 870만원</div>
+    </div>
+    <div class="scheme">
+      <div class="scheme-l">
+        <div class="scheme-n">2차</div>
+        <div class="scheme-d">11월 30일</div>
+      </div>
+      <div class="scheme-v">400만원</div>
+    </div>
+    <div class="scheme">
+      <div class="scheme-l">
+        <div class="scheme-n">3차</div>
+        <div class="scheme-d">12월 31일</div>
+      </div>
+      <div class="scheme-v">기본급 100%</div>
+    </div>
+  </section>
+
+  <section class="card">
+    <p class="kicker">입력</p>
+
+    <div class="field">
+      <span class="lab">입사 연월일</span>
+      <div class="date-row">
+        <select id="yy" aria-label="입사 연도"></select>
+        <select id="mm" aria-label="입사 월"></select>
+        <select id="dd" aria-label="입사 일"></select>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="base">2026년 기본급 <span class="hint">월</span></label>
+      <div class="money">
+        <input type="text" id="base" inputmode="numeric" value="2,493,600">
+        <span class="unit">원</span>
+      </div>
+    </div>
+
+    <button class="calc" id="run">계산하기</button>
+    <p class="error" id="err"></p>
+  </section>
+
+  <section id="result">
+    <div class="card">
+      <div class="rhead">
+        <p class="kicker">계산 결과</p>
+        <div class="rmeta" id="meta"></div>
+      </div>
+
+      <div class="bar" id="bar"></div>
+      <div class="bar-leg" id="barLeg"></div>
+
+      <div id="tiers"></div>
+
+      <div class="totals">
+        <div class="trow"><span class="k">세전 합계</span><span class="v" id="tGross"></span></div>
+        <div class="trow"><span class="k">공제 합계</span><span class="v" id="tDed"></span></div>
+        <div class="trow big"><span class="k">세후 실수령</span><span class="v" id="tNet"></span></div>
+        <div class="pct" id="tPct"></div>
+      </div>
+
+      <details id="taxDetail">
+        <summary>소득세 산출 방식</summary>
+        <div class="panel" id="taxPanel"></div>
+      </details>
+
+    </div>
+  </section>
+
+  <footer>실제 지급액은 회사 규정과 개인별 공제 항목에 따라 달라질 수 있습니다.</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var YEAR = 2026;
+
+  var TIERS = [
+    { n:"1차", d:"노사서약일 (9월 2일 예상)", pay:new Date(2026,8,2),   f:function(b){return b*3+8700000;}, e:"기본급×300% + 8,700,000" },
+    { n:"2차", d:"11월 30일",                pay:new Date(2026,10,30), f:function(){return 4000000;},      e:"4,000,000" },
+    { n:"3차", d:"12월 31일",                pay:new Date(2026,11,31), f:function(b){return b*1;},         e:"기본급×100%" }
+  ];
+  var SHADE = ["#1E46A8","#4E74CC","#93AAE0"];
+
+  /* ── 4대보험 (근로자 부담) ── */
+  var INS = { health:0.03545, ltc:0.1295, emp:0.009 };   // 국민연금은 성과급에 미부과
+
+  /* ── 상여 원천징수 소득세 ──────────────────────────────
+     지급액을 그 달의 급여로 보고 연환산 → 소득세법 적용 → ÷12.
+     간이세액표 구조를 그대로 재현한 뒤, 2025년 실제 명세서
+     4건에 맞춰 구간별 보정계수를 곱한다.                    */
+  function earnedDeduction(A){                 // 근로소득공제
+    var d;
+    if(A<=5000000)        d = A*0.7;
+    else if(A<=15000000)  d = 3500000 + (A-5000000)*0.4;
+    else if(A<=45000000)  d = 7500000 + (A-15000000)*0.15;
+    else if(A<=100000000) d = 12000000 + (A-45000000)*0.05;
+    else                  d = 14750000 + (A-100000000)*0.02;
+    return Math.min(d, 20000000);
+  }
+  function calcTax(t){                         // 기본세율
+    var B=[[14000000,0.06,0],[50000000,0.15,1260000],[88000000,0.24,5760000],
+           [150000000,0.35,15440000],[300000000,0.38,19940000],
+           [500000000,0.40,25940000],[1000000000,0.42,35940000],[Infinity,0.45,65940000]];
+    for(var i=0;i<B.length;i++) if(t<=B[i][0]) return Math.max(0, t*B[i][1]-B[i][2]);
+    return 0;
+  }
+  function wageCredit(c, A){                   // 근로소득세액공제
+    var v = c<=1300000 ? c*0.55 : 715000 + (c-1300000)*0.30;
+    var cap;
+    if(A<=33000000)       cap = 740000;
+    else if(A<=70000000)  cap = Math.max(660000, 740000-(A-33000000)*0.008);
+    else if(A<=120000000) cap = Math.max(500000, 660000-(A-70000000)*0.5);
+    else                  cap = Math.max(200000, 500000-(A-120000000)*0.5);
+    return Math.min(v, cap);
+  }
+  function tableBase(M){                       // 간이세액표 재현값
+    var A   = M*12;
+    var inc = A - earnedDeduction(A);
+    var pen = Math.min(A, 76440000)*0.045;                       // 연금보험료공제
+    var spc = A<=30000000 ? 3100000 + A*0.04 : A*0.049;          // 특별소득공제
+    var b   = Math.max(0, inc - 1500000 - pen - spc);
+    var c   = calcTax(b);
+    return Math.max(0, c - wageCredit(c, A)) / 12;
+  }
+  /* 2025년 명세서 실측 / 재현값 = 보정계수 */
+  var CAL = [[1527452,0.9939],[2966867,1.0104],[9271154,1.0520],[24284000,1.0600]];
+  function calFactor(M){
+    if(M<=CAL[0][0]) return CAL[0][1];
+    for(var i=1;i<CAL.length;i++){
+      if(M<=CAL[i][0]){
+        var a=CAL[i-1], b=CAL[i];
+        return a[1] + (M-a[0])*(b[1]-a[1])/(b[0]-a[0]);
+      }
+    }
+    return CAL[CAL.length-1][1];
+  }
+  function withheldTax(M){
+    if(M<=0) return 0;
+    return Math.floor(tableBase(M)*calFactor(M)/10)*10;
+  }
+
+  /* ── helpers ── */
+  var $=function(id){return document.getElementById(id);};
+  var yy=$("yy"), mm=$("mm"), dd=$("dd"), base=$("base"), family=$("family");
+  var err=$("err"), result=$("result"), tiersEl=$("tiers"), meta=$("meta");
+  var bar=$("bar"), barLeg=$("barLeg");
+  var tGross=$("tGross"), tDed=$("tDed"), tNet=$("tNet"), tPct=$("tPct"), taxPanel=$("taxPanel");
+
+  var today=new Date(), tY=today.getFullYear(), tM=today.getMonth()+1, tD=today.getDate();
+  function opt(s,v,t,on){var o=document.createElement("option");o.value=v;o.textContent=t;if(on)o.selected=true;s.appendChild(o);}
+  var YEARS=[2026,2025,2024], defY=YEARS.indexOf(tY)>=0?tY:YEARS[0];
+  YEARS.forEach(function(y){opt(yy,y,y+"년",y===defY);});
+  for(var m=1;m<=12;m++) opt(mm,m,m+"월",m===tM);
+  function fillDays(){
+    var keep=parseInt(dd.value,10)||tD, max=new Date(+yy.value,+mm.value,0).getDate();
+    if(keep>max) keep=max;
+    dd.innerHTML="";
+    for(var d=1;d<=max;d++) opt(dd,d,d+"일",d===keep);
+  }
+  fillDays(); yy.addEventListener("change",fillDays); mm.addEventListener("change",fillDays);
+
+  function num(s){return parseInt(String(s).replace(/[^0-9]/g,""),10);}
+  function cm(n){return Math.round(n).toLocaleString("ko-KR");}
+  function f10(n){return Math.floor(n/10)*10;}
+  base.addEventListener("focus",function(){this.select();});
+  base.addEventListener("input",function(){var n=num(this.value);this.value=isNaN(n)?"":cm(n);});
+
+  var DAY=86400000;
+  function dDays(a,b){return Math.round((Date.UTC(a.getFullYear(),a.getMonth(),a.getDate())-Date.UTC(b.getFullYear(),b.getMonth(),b.getDate()))/DAY);}
+  function isOut(hire,pay){return pay>new Date(hire.getFullYear()+2,hire.getMonth(),hire.getDate());}
+  function factor(hire,pay){
+    if(hire.getFullYear()<YEAR) return 1;
+    if(new Date(hire.getFullYear(),hire.getMonth()+2,hire.getDate())>pay) return 0;
+    var n=dDays(pay,hire), d=dDays(pay,new Date(YEAR,0,1));
+    if(d<=0) return 0;
+    var f=n/d; return f<0?0:(f>1?1:f);
+  }
+  function el(tag,cls,html){var e=document.createElement(tag);if(cls)e.className=cls;if(html!==undefined)e.innerHTML=html;return e;}
+  function row(k,v,cls){return '<div class="prow'+(cls?" "+cls:"")+'"><span>'+k+'</span><span>'+v+'</span></div>';}
+
+  /* ── main ── */
+  function run(){
+    var b=num(base.value);
+    if(isNaN(b)||b<=0){ fail("기본급을 입력하세요.", base); return; }
+    err.classList.remove("on");
+
+    var hire=new Date(+yy.value, +mm.value-1, +dd.value);
+
+    var rows=TIERS.map(function(t){
+      if(isOut(hire,t.pay)) return {t:t, out:true, g:0, fac:0, itax:0};
+      var f=factor(hire,t.pay);
+      var g=Math.round(t.f(b)*f);
+      return {t:t, out:false, fac:f, g:g, itax:withheldTax(g)};
+    });
+    var P=rows.reduce(function(a,r){return a+r.g;},0);
+
+    // 렌더
+    tiersEl.innerHTML=""; bar.innerHTML=""; barLeg.innerHTML="";
+    var totalDed=0, totalNet=0;
+
+    rows.forEach(function(r,i){
+      var box=el("div","tier");
+      var h=el("div","tier-h");
+      h.appendChild(el("span","tier-n",r.t.n));
+      h.appendChild(el("span","tier-d",r.t.d));
+      box.appendChild(h);
+
+      if(r.out){
+        box.appendChild(el("div",null,'<span class="stop">퇴사</span>'));
+        box.appendChild(el("div","stop-d","지급기준일이 입사 2년을 초과 (2년 계약)"));
+        tiersEl.appendChild(box); return;
+      }
+
+      box.appendChild(el("div","ln",'<span class="k">세전</span><span class="v'+(r.g===0?" dim":"")+'">'+cm(r.g)+'원</span>'));
+
+      if(r.g>0){
+        var share=r.g/P;
+        var health=f10(r.g*INS.health), ltc=f10(health*INS.ltc), emp=f10(r.g*INS.emp);
+        var itax=r.itax, ltax=f10(itax*0.10);
+        var ded=health+ltc+emp+itax+ltax;
+        var net=r.g-ded;
+        totalDed+=ded; totalNet+=net;
+
+        box.appendChild(el("div","ln net",'<span class="k">세후</span><span class="v">'+cm(net)+'원</span>'));
+        box.appendChild(el("div","meta-line", r.t.e+"   팩터 "+r.fac.toFixed(3)+"   공제율 "+(ded/r.g*100).toFixed(1)+"%"));
+
+        var det=el("details");
+        det.appendChild(el("summary",null,"공제 내역"));
+        det.appendChild(el("div","panel",
+            row("건강보험 (3.545%)", cm(health))
+          + row("장기요양 (12.95%)", cm(ltc))
+          + row("고용보험 (0.9%)", cm(emp))
+          + row("국민연금 (성과급 미부과)", "0")
+          + row("소득세 ("+(itax/r.g*100).toFixed(2)+"%)", cm(itax))
+          + row("지방소득세", cm(ltax))
+          + row("합계", cm(ded), "tot")));
+        box.appendChild(det);
+
+        // 비율 바
+        var seg=el("i"); seg.style.width=(share*100)+"%"; seg.style.background=SHADE[i];
+        bar.appendChild(seg);
+        var lg=el("span",null,r.t.n+" "+Math.round(share*100)+"%");
+        lg.style.color=SHADE[i];
+        barLeg.appendChild(lg);
+      }else{
+        box.appendChild(el("div","ln net",'<span class="k">세후</span><span class="v dim">—</span>'));
+        box.appendChild(el("div","meta-line", r.t.e+"   팩터 "+r.fac.toFixed(3)));
+      }
+      tiersEl.appendChild(box);
+    });
+
+    if(P<=0){ bar.style.display="none"; barLeg.style.display="none"; }
+    else { bar.style.display="flex"; barLeg.style.display="flex"; }
+
+    tGross.textContent=cm(P)+"원";
+    tDed.textContent="−"+cm(totalDed)+"원";
+    tNet.textContent=cm(totalNet)+"원";
+    tPct.textContent = P>0 ? "세전 대비 "+(totalNet/P*100).toFixed(1)+"%" : "";
+
+    meta.innerHTML = hire.getFullYear()+"."+(hire.getMonth()+1)+"."+hire.getDate()+" 입사<br>"
+                   + "기본급 "+cm(b);
+
+    var pRows="";
+    rows.forEach(function(r){
+      if(r.out || r.g<=0) return;
+      pRows += row(r.t.n+"  "+cm(r.g)+"원 → 월환산 "+cm(r.g*12)+"원",
+                   cm(r.itax)+"  ("+(r.itax/r.g*100).toFixed(2)+"%)");
+    });
+    taxPanel.innerHTML =
+        '<div class="prow sub"><span>지급액을 그 달의 급여로 보고 연환산해 간이세액표를 적용합니다. '
+      + '건별 금액이 클수록 세율이 높아집니다.</span><span></span></div>'
+      + pRows
+      + row("소득세 합계", cm(rows.reduce(function(a,r){return a+r.itax;},0)), "tot");
+
+    result.classList.add("on");
+    result.scrollIntoView({behavior:"smooth",block:"start"});
+  }
+
+  function fail(msg, focusEl){
+    err.textContent=msg; err.classList.add("on");
+    result.classList.remove("on"); focusEl.focus();
+  }
+
+  $("run").addEventListener("click",run);
+  base.addEventListener("keydown",function(ev){ if(ev.key==="Enter"){ this.blur(); run(); } });
+})();
+</script>
+</body>
+</html>
